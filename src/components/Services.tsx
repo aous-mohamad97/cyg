@@ -168,7 +168,7 @@ export default function Services({
     },
   };
 
-  const handleServiceClick = (index: number, serviceKey?: string) => {
+  const handleServiceClick = (index: number) => {
     setActiveServiceIndex(index);
 
     // Scroll to special service component
@@ -253,7 +253,7 @@ export default function Services({
                     {showSpecialService ? (
                       <button
                         onClick={() =>
-                          handleServiceClick(index, service.serviceKey)
+                          handleServiceClick(index)
                         }
                         className="btn-service inline-flex items-center justify-center font-semibold hover:scale-105 w-full"
                         style={{

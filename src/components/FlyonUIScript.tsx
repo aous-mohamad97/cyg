@@ -10,8 +10,8 @@ export default function FlyonUIScript() {
       if (typeof window !== 'undefined') {
         // Wait for FlyonUI to load
         const checkFlyonUI = () => {
-          if ((window as any).HSStaticMethods) {
-            (window as any).HSStaticMethods.autoInit();
+          if ((window as unknown as { HSStaticMethods?: { autoInit: () => void } }).HSStaticMethods) {
+            (window as unknown as { HSStaticMethods: { autoInit: () => void } }).HSStaticMethods.autoInit();
             console.log('FlyonUI initialized successfully');
             
             // Force carousel initialization after a delay
@@ -20,8 +20,9 @@ export default function FlyonUIScript() {
               if (carousel) {
                 console.log('Carousel element found:', carousel);
                 // Trigger carousel initialization
-                if ((window as any).HSStaticMethods && (window as any).HSStaticMethods.autoInit) {
-                  (window as any).HSStaticMethods.autoInit();
+                const windowWithHS = window as unknown as { HSStaticMethods?: { autoInit: () => void } };
+                if (windowWithHS.HSStaticMethods && windowWithHS.HSStaticMethods.autoInit) {
+                  windowWithHS.HSStaticMethods.autoInit();
                 }
               }
             }, 500);

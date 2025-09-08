@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   Bars3Icon,
@@ -82,9 +83,11 @@ export default function Header() {
         >
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <img
+            <Image
               src="/images/logo.png"
-              alt="CYG Parnters"
+              alt="CYG Partners"
+              width={120}
+              height={48}
               className="object-contain"
             />
           </Link>

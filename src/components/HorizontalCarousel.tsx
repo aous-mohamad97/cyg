@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import Image from "next/image";
 
 interface SlideData {
   id: number;
@@ -120,7 +119,7 @@ export default function HorizontalCarousel() {
   return (
     <main className="relative w-full h-[70vh] bg-black overflow-hidden">
       <ul ref={sliderRef} className="slider">
-        {slides.map((slide, index) => (
+        {slides.map((slide) => (
           <li
             key={slide.id}
             className="item"

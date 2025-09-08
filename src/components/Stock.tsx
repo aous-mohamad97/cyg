@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import IndustriesGrid from "./IndustriesGrid";
 
 interface StockProps {
@@ -22,7 +23,12 @@ export default function Stock({
       <div className="relative w-full h-[800px] flex items-center justify-center text-center overflow-hidden bg-black">
         {/* Background Image Overlay */}
         <div className="absolute z-0 opacity-20">
-          <img src={backgroundImage} alt={backgroundImageAlt} />
+          <Image 
+            src={backgroundImage} 
+            alt={backgroundImageAlt} 
+            fill
+            className="object-cover"
+          />
         </div>
 
         {/* Content */}

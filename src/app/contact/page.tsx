@@ -2,13 +2,6 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import {
-  EnvelopeIcon,
-  PhoneIcon,
-  MapPinIcon,
-  ClockIcon,
-} from "@heroicons/react/24/outline";
-import { ArrowRightIcon } from "@heroicons/react/24/solid";
 import Hero from "@/components/Hero";
 import IndustryPerspectivesHeading from "@/components/IndustryPerspectivesHeading";
 import IndustryPerspectivesCarousel from "@/components/IndustryPerspectivesCarousel";

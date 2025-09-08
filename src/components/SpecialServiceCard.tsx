@@ -34,7 +34,6 @@ export default function SpecialServiceCard({
   mainIconAlt,
   subServices,
   mainContentOrder = 1,
-  subServicesOrder = 2,
 }: SpecialServiceCardProps) {
   return (
     <div className="py-20 px-4">

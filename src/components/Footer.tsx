@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Image from "next/image";
 
 export default function Footer() {
   return (
@@ -10,9 +10,11 @@ export default function Footer() {
         {/* Logo and Contact */}
         <div className="text-center mb-12">
           <div className="flex justify-center mb-6">
-            <img
+            <Image
               src="/images/cyg-logo.png"
               alt="CYG Partners"
+              width={200}
+              height={80}
               className="object-contain"
               style={{
                 position: "absolute",
