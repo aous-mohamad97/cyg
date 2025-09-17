@@ -219,7 +219,7 @@ export default function HorizontalCarousel() {
         }
 
         .content .title {
-          font-family: "arial-black";
+          font-family: "Helvetica, Arial, sans-serif";
           text-transform: uppercase;
           font-size: 3rem;
           font-weight: bold;

@@ -1,15 +1,18 @@
-'use client'
+/* eslint-disable react/jsx-no-undef */
+"use client";
+
+import Image from "next/image";
 
 interface SimpleHeroProps {
-  backgroundImage: string
-  title: string
-  description: string
+  backgroundImage: string;
+  title: string;
+  description: string;
 }
 
 export default function SimpleHero({
   backgroundImage,
   title,
-  description
+  description,
 }: SimpleHeroProps) {
   return (
     <section
@@ -20,7 +23,6 @@ export default function SimpleHero({
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
         backgroundAttachment: "fixed",
-        boxShadow: "inset 0px 68px 20px 20px black",
       }}
     >
       <div
@@ -28,41 +30,51 @@ export default function SimpleHero({
         style={{
           background: "rgba(28, 28, 28, 0.5)",
         }}
-      ></div>
-      
+      >
+        <Image
+          src="/images/shadow.png"
+          alt="shadow"
+          fill
+          style={{
+            objectFit: "cover",
+            pointerEvents: "none",
+          }}
+        />
+      </div>
+
       {/* Main Content */}
       <div className="relative z-10 px-4 max-w-7xl mx-auto text-center">
-        <h1 
+        <h1
           className="mb-6"
           style={{
-            fontFamily: 'Helvetica',
+            fontFamily: "Helvetica",
             fontWeight: 300,
-            fontStyle: 'normal',
-            fontSize: '70px',
-            lineHeight: '70px',
-            letterSpacing: '0%',
-            textAlign: 'center',
-            color: 'white'
+            fontStyle: "normal",
+            fontSize: "70px",
+            lineHeight: "70px",
+            letterSpacing: "0%",
+            textAlign: "center",
+            color: "white",
           }}
         >
           {title}
         </h1>
-        <p 
+        <p
           className="max-w-4xl mx-auto"
           style={{
-            fontFamily: 'Grift',
+            fontFamily: "Grift",
             fontWeight: 500,
-            fontStyle: 'normal',
-            fontSize: '32px',
-            lineHeight: '40px',
-            letterSpacing: '0%',
-            textAlign: 'center',
-            color: 'white'
+            fontStyle: "normal",
+            fontSize: "32px",
+            lineHeight: "40px",
+            letterSpacing: "0%",
+            textAlign: "center",
+            color: "white",
           }}
         >
           {description}
         </p>
       </div>
     </section>
-  )
+  );
 }

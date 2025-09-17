@@ -214,7 +214,7 @@ export default function Hero({
       {/* Footer Section with Brand Logos */}
       {showFooter && (
         <div
-          className="absolute bottom-8 left-0 right-0 h-[10vh] px-4"
+          className="absolute bottom-0 left-0 right-0 h-[10vh] px-4"
           style={{
             backgroundColor: "#00000069",
             borderTop: "1px solid rgba(255, 255, 255, 0.1)",
@@ -229,7 +229,7 @@ export default function Hero({
                   <div key={`first-${index}`} className="flex items-center space-x-2 whitespace-nowrap">
                     <div
                       className="text-white font-bold text-lg"
-                      style={{ fontFamily: "Georgia, serif" }}
+                      style={{ fontFamily: "Helvetica, Arial, sans-serif" }}
                     >
                       {logo.brand}
                     </div>
@@ -243,7 +243,7 @@ export default function Hero({
                   <div key={`second-${index}`} className="flex items-center space-x-2 whitespace-nowrap">
                     <div
                       className="text-white font-bold text-lg"
-                      style={{ fontFamily: "Georgia, serif" }}
+                      style={{ fontFamily: "Helvetica, Arial, sans-serif" }}
                     >
                       {logo.brand}
                     </div>

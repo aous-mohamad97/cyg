@@ -82,10 +82,13 @@ export default function AboutPage() {
       <section className="py-16 px-4 bg-[#2C2C2C]">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+            <h2 className="text-4xl md:text-5xl mb-4">
               Meet <span className="text-primary-500">CYG</span> Team
             </h2>
-            <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+            <p 
+              className="text-lg text-gray-300 max-w-2xl mx-auto"
+              style={{ fontFamily: "Grift, Arial, sans-serif" }}
+            >
               We provide end‑to‑end advisory—from capital raises and M&A to
               long‑term strategy—empowering confident, growth‑driven decisions
             </p>

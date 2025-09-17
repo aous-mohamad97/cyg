@@ -4,7 +4,6 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRightIcon } from "@heroicons/react/24/solid";
 import SpecialServiceCard from "./SpecialServiceCard";
 
 interface ServiceCard {
@@ -249,7 +248,7 @@ export default function Services({
                   </div>
                 </div>
                 {service.buttonText && (
-                  <div className="mt-auto">
+                  <div className="mt-auto flex justify-center">
                     {showSpecialService ? (
                       <button
                         onClick={() =>
@@ -282,12 +281,11 @@ export default function Services({
                         }}
                       >
                         {service.buttonText}
-                        <ArrowRightIcon className="ml-2 h-4 w-4" />
                       </button>
                     ) : (
                       <Link
                         href={service.buttonHref}
-                        className="btn-service inline-flex items-center justify-center font-semibold hover:scale-105 w-full"
+                        className="btn-service inline-flex items-center justify-center font-semibold hover:scale-105"
                         style={{
                           backgroundColor:
                             activeServiceIndex === index
@@ -314,7 +312,6 @@ export default function Services({
                         }}
                       >
                         {service.buttonText}
-                        <ArrowRightIcon className="ml-2 h-4 w-4" />
                       </Link>
                     )}
                   </div>
