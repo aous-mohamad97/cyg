@@ -100,9 +100,13 @@ export default function SpecialServiceCard({
           }`}
         >
           {subServices.map((service, index) => (
-            <Link
+            // <Link
+            //   key={index}
+            //   href={service.href || "#"}
+            //   className="p-6 text-center transition-all duration-300 hover:scale-105 hover:shadow-lg bg-black border border-gray-700 hover:border-primary-500 hover:bg-primary-500"
+            // >
+            <div
               key={index}
-              href={service.href || "#"}
               className="p-6 text-center transition-all duration-300 hover:scale-105 hover:shadow-lg bg-black border border-gray-700 hover:border-primary-500 hover:bg-primary-500"
             >
                <div className="w-48 h-48 rounded-full flex items-center justify-center mx-auto mb-4 relative">
@@ -125,7 +129,8 @@ export default function SpecialServiceCard({
               <h3 className="text-white font-semibold text-lg">
                 {service.title}
               </h3>
-            </Link>
+            </div>
+            // </Link>
           ))}
         </div>
       </div>
