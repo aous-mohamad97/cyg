@@ -24,6 +24,7 @@ interface ServicesProps {
   backgroundGradient?: string;
   services: ServiceCard[];
   showSpecialService?: boolean;
+  clickableCards?: boolean;
   specialServiceData?: {
     title: string;
     titleAccent: string;
@@ -49,6 +50,7 @@ export default function Services({
   backgroundGradient,
   services,
   showSpecialService = false,
+  clickableCards = false,
   specialServiceData,
 }: ServicesProps) {
   const [activeServiceIndex, setActiveServiceIndex] = useState<number | null>(
@@ -179,6 +181,12 @@ export default function Services({
     }
   };
 
+  const handleCardClick = (service: ServiceCard, index: number) => {
+    if (clickableCards) {
+      handleServiceClick(index);
+    }
+  };
+
   // Get current special service data
   const getCurrentSpecialServiceData = () => {
     if (
@@ -214,7 +222,8 @@ export default function Services({
                   activeServiceIndex === index
                     ? "border-primary-500 shadow-glow bg-primary-700"
                     : "border-white hover:border-primary-500 hover:shadow-glow"
-                }`}
+                } ${clickableCards ? "cursor-pointer" : ""}`}
+                onClick={() => handleCardClick(service, index)}
               >
                 <h3 className="text-2xl font-bold text-center text-white mb-4 flex-grow">
                   {service.title || "Explore "}
@@ -249,7 +258,38 @@ export default function Services({
                 </div>
                 {service.buttonText && (
                   <div className="mt-auto flex justify-center">
-                    {showSpecialService ? (
+                    {showSpecialService && clickableCards ? (
+                      <Link
+                        href={service.buttonHref}
+                        className="btn-service inline-flex items-center justify-center font-semibold hover:scale-105 w-full"
+                        style={{
+                          backgroundColor:
+                            activeServiceIndex === index
+                              ? "#4FD1C5"
+                              : "#38A169",
+                          color: "white",
+                          textDecoration: "none",
+                          transition: "all 0.3s ease",
+                          cursor: "pointer",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = "#4FD1C5";
+                          e.currentTarget.style.transform = "translateY(-2px)";
+                          e.currentTarget.style.boxShadow =
+                            "0 8px 25px rgba(56, 161, 105, 0.3)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor =
+                            activeServiceIndex === index
+                              ? "#4FD1C5"
+                              : "#38A169";
+                          e.currentTarget.style.transform = "translateY(0)";
+                          e.currentTarget.style.boxShadow = "none";
+                        }}
+                      >
+                        {service.buttonText}
+                      </Link>
+                    ) : showSpecialService ? (
                       <button
                         onClick={() =>
                           handleServiceClick(index)

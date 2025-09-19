@@ -37,7 +37,7 @@ export default function ServicesPage() {
         image: "/images/spec-ico.png",
         imageAlt: "Strategic Advisory",
         buttonText: "Learn More",
-        buttonHref: "#",
+        buttonHref: "/services/strategic-advisory",
         serviceKey: "strategic",
       },
       {
@@ -48,7 +48,7 @@ export default function ServicesPage() {
         image: "/images/buy-ico.png",
         imageAlt: "Sell-Side Advisory",
         buttonText: "Learn More",
-        buttonHref: "#",
+        buttonHref: "/services/sell-side-advisory",
         serviceKey: "sell-side",
       },
       {
@@ -59,7 +59,7 @@ export default function ServicesPage() {
         image: "/images/side-ico.png",
         imageAlt: "Buy-Side Advisory",
         buttonText: "Learn More",
-        buttonHref: "#",
+        buttonHref: "/services/buy-side-advisory",
         serviceKey: "buy-side",
       },
     ],
@@ -131,7 +131,7 @@ export default function ServicesPage() {
 
       {/* Services Component */}
       <AnimateOnScroll animation="fadeInUp" delay={200}>
-        <Services {...servicesData} />
+        <Services {...servicesData} clickableCards={true} />
       </AnimateOnScroll>
 
       {/* CTA Component */}
