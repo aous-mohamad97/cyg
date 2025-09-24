@@ -6,12 +6,14 @@ import Image from "next/image";
 interface SimpleHeroProps {
   backgroundImage: string;
   title: string;
+  titleAccent?: string; // Accent part of the title (optional)
   description: string;
 }
 
 export default function SimpleHero({
   backgroundImage,
   title,
+  titleAccent,
   description,
 }: SimpleHeroProps) {
   return (
@@ -57,7 +59,11 @@ export default function SimpleHero({
             color: "white",
           }}
         >
-          {title}
+          {/* MODIFIED: Render title and accent title */}
+          {title}{" "}
+          {titleAccent && (
+            <span className="block text-primary-500">{titleAccent}</span>
+          )}
         </h1>
         <p
           className="max-w-4xl mx-auto"

@@ -1,6 +1,47 @@
+// ADDED: "use client" directive is necessary for hooks
+"use client";
+
 import Image from "next/image";
+// ADDED: Import hooks and data-layer functions/types
+import { useState, useEffect } from "react";
+import { getFooter } from "@/lib/strapi";
+import { transformFooter } from "@/lib/transform";
+import { FooterData } from "@/types/strapi";
 
 export default function Footer() {
+  // ADDED: State to hold footer data
+  const [footerData, setFooterData] = useState<FooterData | null>(null);
+
+  // ADDED: Fetch data on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const footer = await getFooter();
+        if (footer) {
+          const transformedFooterData = transformFooter(footer);
+          setFooterData(transformedFooterData);
+        }
+      } catch (error) {
+        console.error("Error fetching footer data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // ADDED: Fallback data using your original hard-coded values
+  const fallbackFooterData: FooterData = {
+    logoUrl: "/images/cyg-logo.png",
+    logoAlt: "CYG Partners",
+    email: "info@CYGPartners.com",
+    phone: "+971 56 322 1025",
+    address: "Boulevard, Dubai, UAE",
+    copyrightText: "© Copyright 2025 CYG Partners. All rights reserved.",
+  };
+
+  // ADDED: Selects fetched data or the fallback
+  const currentFooterData = footerData || fallbackFooterData;
+
   return (
     <footer
       className="bg-footer border-t border-gray-700"
@@ -11,8 +52,9 @@ export default function Footer() {
         <div className="text-center mb-12">
           <div className="flex justify-center mb-6">
             <Image
-              src="/images/cyg-logo.png"
-              alt="CYG Partners"
+              // MODIFIED: Use dynamic data
+              src={currentFooterData.logoUrl}
+              alt={currentFooterData.logoAlt}
               width={200}
               height={80}
               className="object-contain"
@@ -21,6 +63,8 @@ export default function Footer() {
                 top: "25%",
                 left: "50%",
                 transform: "translate(-50%, -10%)",
+                height: "auto",
+                width: "auto",
               }}
             />
           </div>
@@ -38,24 +82,27 @@ export default function Footer() {
             <div className="text-center">
               <h3 className="text-white font-semibold mb-2">Email</h3>
               <a
-                href="mailto:info@CYGPartners.com"
+                // MODIFIED: Use dynamic data
+                href={`mailto:${currentFooterData.email}`}
                 className="text-gray-300 hover:text-primary-500 transition-colors duration-200"
               >
-                info@CYGPartners.com
+                {currentFooterData.email}
               </a>
             </div>
             <div className="text-center">
               <h3 className="text-white font-semibold mb-2">Phone</h3>
               <a
-                href="tel:+971563221025"
+                // MODIFIED: Use dynamic data
+                href={`tel:${currentFooterData.phone.replace(/\s/g, "")}`}
                 className="text-gray-300 hover:text-primary-500 transition-colors duration-200"
               >
-                +971 56 322 1025
+                {currentFooterData.phone}
               </a>
             </div>
             <div className="text-center">
               <h3 className="text-white font-semibold mb-2">Address</h3>
-              <p className="text-gray-300">Boulevard, Dubai, UAE</p>
+              {/* MODIFIED: Use dynamic data */}
+              <p className="text-gray-300">{currentFooterData.address}</p>
             </div>
           </div>
         </div>
@@ -69,8 +116,9 @@ export default function Footer() {
             transform: "translate(-50%, -10%)",
           }}
         >
+          {/* MODIFIED: Use dynamic data */}
           <p className="text-white text-sm">
-            © Copyright 2025 CYG Partners. All rights reserved.
+            {currentFooterData.copyrightText}
           </p>
         </div>
       </div>

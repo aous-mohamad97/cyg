@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import SpecialServiceCard from "./SpecialServiceCard";
@@ -15,6 +15,13 @@ interface ServiceCard {
   buttonText: string;
   buttonHref: string;
   serviceKey?: string; // Add service key for data mapping
+  subServices?: Array<{
+    id: number;
+    title: string;
+    icon: string;
+    backgroundColor: "green" | "black";
+    href: string;
+  }>;
 }
 
 interface ServicesProps {
@@ -25,6 +32,11 @@ interface ServicesProps {
   services: ServiceCard[];
   showSpecialService?: boolean;
   clickableCards?: boolean;
+  // Show only the special service card and hide the grid
+  onlySpecialCard?: boolean;
+  // New: control default selected service on first render
+  defaultActiveIndex?: number;
+  defaultServiceKey?: string;
   specialServiceData?: {
     title: string;
     titleAccent: string;
@@ -51,6 +63,9 @@ export default function Services({
   services,
   showSpecialService = false,
   clickableCards = false,
+  onlySpecialCard = false,
+  defaultActiveIndex,
+  defaultServiceKey,
   specialServiceData,
 }: ServicesProps) {
   const [activeServiceIndex, setActiveServiceIndex] = useState<number | null>(
@@ -58,116 +73,28 @@ export default function Services({
   );
   const specialServiceRef = useRef<HTMLDivElement>(null);
 
-  // Service data mapping for different services
-  const serviceDataMap: Record<
-    string,
-    {
-      title: string;
-      titleAccent: string;
-      description: string;
-      buttonText: string;
-      buttonHref: string;
-      mainIcon: string;
-      mainIconAlt: string;
-      subServices: Array<{
-        title: string;
-        icon: string;
-        backgroundColor: "green" | "black";
-        href: string;
-      }>;
+  // Select a default service on first load (services page can pass defaults)
+  useEffect(() => {
+    if (!showSpecialService || !services || services.length === 0) return;
+    // If a defaultServiceKey is provided, prefer it
+    if (defaultServiceKey) {
+      const idx = services.findIndex(
+        (svc) => (svc.serviceKey || "").toLowerCase() === defaultServiceKey.toLowerCase()
+      );
+      if (idx !== -1) {
+        setActiveServiceIndex(idx);
+        return;
+      }
     }
-  > = {
-    strategic: {
-      title: "Dummy Data 1",
-      titleAccent: "Strategic Advisory",
-      description:
-        "This is dummy data 1 for Strategic Advisory. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.",
-      buttonText: "Get Started",
-      buttonHref: "/services/strategic-advisory",
-      mainIcon: "/images/spec-ico.png",
-      mainIconAlt: "Strategic Advisory",
-      subServices: [
-        {
-          title: "Dummy Service A",
-          icon: "/images/spec-ico.png",
-          backgroundColor: "green" as const,
-          href: "/services/strategic-advisory/service-a",
-        },
-        {
-          title: "Dummy Service B",
-          icon: "/images/spec-ico.png",
-          backgroundColor: "black" as const,
-          href: "/services/strategic-advisory/service-b",
-        },
-        {
-          title: "Dummy Service C",
-          icon: "/images/spec-ico.png",
-          backgroundColor: "black" as const,
-          href: "/services/strategic-advisory/service-c",
-        },
-      ],
-    },
-    "sell-side": {
-      title: "Dummy Data 2",
-      titleAccent: "Sell-Side Advisory",
-      description:
-        "This is dummy data 2 for Sell-Side Advisory. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-      buttonText: "Contact Us",
-      buttonHref: "/services/sell-side-advisory",
-      mainIcon: "/images/stock.png",
-      mainIconAlt: "Sell-Side Advisory",
-      subServices: [
-        {
-          title: "Dummy Feature X",
-          icon: "/images/spec-ico.png",
-          backgroundColor: "green" as const,
-          href: "/services/sell-side-advisory/feature-x",
-        },
-        {
-          title: "Dummy Feature Y",
-          icon: "/images/spec-ico.png",
-          backgroundColor: "black" as const,
-          href: "/services/sell-side-advisory/feature-y",
-        },
-        {
-          title: "Dummy Feature Z",
-          icon: "/images/spec-ico.png",
-          backgroundColor: "black" as const,
-          href: "/services/sell-side-advisory/feature-z",
-        },
-      ],
-    },
-    "buy-side": {
-      title: "Dummy Data 3",
-      titleAccent: "Buy-Side Advisory",
-      description:
-        "This is dummy data 3 for Buy-Side Advisory. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.",
-      buttonText: "Learn More",
-      buttonHref: "/services/buy-side-advisory",
-      mainIcon: "/images/t-stock.png",
-      mainIconAlt: "Buy-Side Advisory",
-      subServices: [
-        {
-          title: "Dummy Option 1",
-          icon: "/images/spec-ico.png",
-          backgroundColor: "green" as const,
-          href: "/services/buy-side-advisory/option-1",
-        },
-        {
-          title: "Dummy Option 2",
-          icon: "/images/spec-ico.png",
-          backgroundColor: "black" as const,
-          href: "/services/buy-side-advisory/option-2",
-        },
-        {
-          title: "Dummy Option 3",
-          icon: "/images/spec-ico.png",
-          backgroundColor: "black" as const,
-          href: "/services/buy-side-advisory/option-3",
-        },
-      ],
-    },
-  };
+    // Else use provided index, else fallback to first card
+    if (typeof defaultActiveIndex === "number" && defaultActiveIndex >= 0 && defaultActiveIndex < services.length) {
+      setActiveServiceIndex(defaultActiveIndex);
+      return;
+    }
+    setActiveServiceIndex(0);
+  }, [showSpecialService, services, defaultActiveIndex, defaultServiceKey]);
+
+  // Build special card data from the selected Strapi service
 
   const handleServiceClick = (index: number) => {
     setActiveServiceIndex(index);
@@ -189,14 +116,24 @@ export default function Services({
 
   // Get current special service data
   const getCurrentSpecialServiceData = () => {
-    if (
-      activeServiceIndex !== null &&
-      services[activeServiceIndex]?.serviceKey
-    ) {
-      const serviceKey = services[activeServiceIndex].serviceKey;
-      return serviceDataMap[serviceKey] || specialServiceData;
-    }
-    return specialServiceData;
+    if (activeServiceIndex === null) return specialServiceData;
+    const current = services[activeServiceIndex];
+    if (!current) return specialServiceData;
+    return {
+      title: current.title,
+      titleAccent: current.titleAccent,
+      description: current.description,
+      buttonText: current.buttonText || "Learn More",
+      buttonHref: current.buttonHref || "#",
+      mainIcon: current.image,
+      mainIconAlt: current.imageAlt || current.titleAccent || current.title,
+      subServices: (current.subServices || []).map((s) => ({
+        title: s.title,
+        icon: s.icon,
+        backgroundColor: s.backgroundColor,
+        href: s.href,
+      })),
+    };
   };
   return (
     <section
@@ -213,7 +150,7 @@ export default function Services({
           <p className="text-xl text-white max-w-3xl mx-auto">{description}</p>
         </div>
 
-        {services && services.length > 0 && (
+        {!onlySpecialCard && services && services.length > 0 && (
           <div className="grid md:grid-cols-3 gap-8">
             {services.map((service, index) => (
               <div
@@ -239,6 +176,7 @@ export default function Services({
                     src={service.image}
                     alt={service.imageAlt}
                     fill
+                    sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
                     className="object-contain"
                     onError={(e) => {
                       const target = e.currentTarget as HTMLImageElement;

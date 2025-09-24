@@ -1,18 +1,59 @@
 "use client";
+
+import { useState, useEffect } from "react";
 import Hero from "@/components/Hero";
 import Services from "@/components/Services";
 import CTA from "@/components/CTA";
 import AnimateOnScroll from "@/components/AnimateOnScroll";
+// ADDED: Import functions and types for the services section
+import { getPageHeroSectionByPageName, getServices } from "@/lib/strapi";
+import { transformPageHeroSection, transformService } from "@/lib/transform";
+import { PageHeroSectionData, ServiceData, Service } from "@/types/strapi";
 
 export default function ServicesPage() {
-  const heroData = {
-    backgroundImage: "/images/BG-Services.png",
+  const [heroData, setHeroData] = useState<PageHeroSectionData | null>(null);
+  // Services list fetched directly from /api/services
+  const [servicesData, setServicesData] = useState<ServiceData[]>([]);
+
+  useEffect(() => {
+    // MODIFIED: Renamed function to fetch all page data
+    const fetchData = async () => {
+      try {
+        // Fetch hero data
+        const pageHero = await getPageHeroSectionByPageName("services");
+        if (pageHero) {
+          const transformedHeroData = transformPageHeroSection(pageHero);
+          setHeroData(transformedHeroData);
+        }
+
+        // Fetch services directly from /api/services
+        const servicesResponse = await getServices();
+        if (servicesResponse && servicesResponse.length > 0) {
+          const transformed = servicesResponse.map((svc: Service) =>
+            transformService(svc)
+          );
+          setServicesData(transformed);
+        }
+      } catch (error) {
+        console.error("Error fetching services page data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Fallback hero data
+  const fallbackHeroData = {
+    id: 1,
+    pageName: "services",
     title: "Tailored Solutions to",
     titleAccent: "Maximize Value",
     description:
       "Whether you're launching, scaling, or transforming, we deliver trusted guidance at a price that fits your business.",
+    backgroundImage: "/images/BG-Services.png",
     buttons: [
       {
+        id: 1,
         text: "Get Started",
         href: "/contact",
         variant: "primary" as const,
@@ -20,118 +61,46 @@ export default function ServicesPage() {
       },
     ],
     textAlign: "center" as const,
+    showFooter: false,
   };
 
-  const servicesData = {
-    title: "Our Core",
-    titleAccent: "Services",
-    description:
-      "We offer three core services to help you grow, sell, or realize a liquidity event successfully.",
-    backgroundGradient: "linear-gradient(180deg, #1C1C1C 0%, #2D2D2D 100%)",
-    services: [
-      {
-        title: "Explore",
-        titleAccent: "Strategic",
-        description:
-          "Full-cycle guidance through the sales process — from valuation to closing.",
-        image: "/images/spec-ico.png",
-        imageAlt: "Strategic Advisory",
-        buttonText: "Learn More",
-        buttonHref: "/services/strategic-advisory",
-        serviceKey: "strategic",
-      },
-      {
-        title: "Explore",
-        titleAccent: "Sell-Side",
-        description:
-          "Expert guidance through the entire sell-side process, maximizing value and ensuring smooth transactions.",
-        image: "/images/buy-ico.png",
-        imageAlt: "Sell-Side Advisory",
-        buttonText: "Learn More",
-        buttonHref: "/services/sell-side-advisory",
-        serviceKey: "sell-side",
-      },
-      {
-        title: "Explore",
-        titleAccent: "Buy-Side",
-        description:
-          "Strategic acquisition support and due diligence to help you make informed investment decisions.",
-        image: "/images/side-ico.png",
-        imageAlt: "Buy-Side Advisory",
-        buttonText: "Learn More",
-        buttonHref: "/services/buy-side-advisory",
-        serviceKey: "buy-side",
-      },
-    ],
-    showSpecialService: true,
-    specialServiceData: {
-      title: "Explore",
-      titleAccent: "Strategic Advisory",
-      description:
-        "Position your business for the right exit. From valuation to buyer negotiation, we guide you through the entire sale process maximizing outcomes while minimizing disruption.",
-      buttonText: "Learn More",
-      buttonHref: "/services/strategic-advisory",
-      mainIcon: "/images/spec-ico.png",
-      mainIconAlt: "Strategic Advisory",
-      subServices: [
-        {
-          title: "Monthly & Quarterly Performance",
-          icon: (
-            <svg
-              className="w-8 h-8 text-green-600"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          ),
-          backgroundColor: "green" as const,
-          href: "/services/strategic-advisory/monthly-quarterly-performance",
-        },
-        {
-          title: "Financial & Operational Monitoring",
-          icon: (
-            <svg
-              className="w-8 h-8 text-gray-800"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6z"
-                clipRule="evenodd"
-              />
-            </svg>
-          ),
-          backgroundColor: "black" as const,
-          href: "/services/strategic-advisory/financial-operational-monitoring",
-        },
-        {
-          title: "Ad Hoc Strategic Advisory",
-          icon: (
-            <svg
-              className="w-8 h-8 text-gray-800"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
-            </svg>
-          ),
-          backgroundColor: "black" as const,
-          href: "/services/strategic-advisory/ad-hoc-strategic-advisory",
-        },
-      ],
-    },
-  };
+  const currentHeroData = heroData || fallbackHeroData;
+
+  // Presentation strings for the section
+  const servicesSectionTitle = "Our Core";
+  const servicesSectionTitleAccent = "Services";
+  const servicesSectionDescription =
+    "We offer three core services to help you grow, sell, or realize a liquidity event successfully.";
+  const servicesBackgroundGradient =
+    "linear-gradient(180deg, #1C1C1C 0%, #2D2D2D 100%)";
+  const showSpecialService = true;
+  const clickableCards = true;
 
   return (
     <main>
       {/* Hero Section */}
-      <Hero {...heroData} />
+      <Hero
+        backgroundImage={currentHeroData.backgroundImage}
+        title={currentHeroData.title}
+        titleAccent={currentHeroData.titleAccent}
+        description={currentHeroData.description}
+        buttons={currentHeroData.buttons}
+        textAlign={currentHeroData.textAlign}
+      />
 
-      {/* Services Component */}
+      {/* Services Component now uses services from /api/services */}
       <AnimateOnScroll animation="fadeInUp" delay={200}>
-        <Services {...servicesData} clickableCards={true} />
+        <Services
+          title={servicesSectionTitle}
+          titleAccent={servicesSectionTitleAccent}
+          description={servicesSectionDescription}
+          backgroundGradient={servicesBackgroundGradient}
+          services={servicesData}
+          showSpecialService={showSpecialService}
+          clickableCards={clickableCards}
+          // Default to strategic on first load
+          defaultServiceKey="strategic"
+        />
       </AnimateOnScroll>
 
       {/* CTA Component */}

@@ -10,61 +10,72 @@ interface SlideData {
   alt: string;
 }
 
-export default function HorizontalCarousel() {
+interface HorizontalCarouselProps {
+  slides?: SlideData[];
+}
+
+export default function HorizontalCarousel({
+  slides: propSlides,
+}: HorizontalCarouselProps) {
   const [isClient, setIsClient] = useState(false);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0); // First slide is initially active
   const sliderRef = useRef<HTMLUListElement>(null);
 
-  const slides: SlideData[] = [
+  // Fallback slides data (Client Reviews)
+  const fallbackSlides: SlideData[] = [
     {
       id: 1,
-      title: "Fouad Najjar",
+      title: "John Smith",
       description:
-        "With over a decade of banking and advisory experience across MENA, Fouad guides business through complex financial decisions—from strategic planning to mergers & acquisitions.",
+        "CYG Partners transformed our financial strategy completely. Their expertise in M&A helped us achieve a 40% increase in valuation. Exceptional service and deep market insights.",
       image: "/images/slide.png",
-      alt: "Fouad Najjar",
+      alt: "John Smith - CEO",
     },
     {
       id: 2,
-      title: "Sarah Johnson",
+      title: "Maria Garcia",
       description:
-        "Sarah brings extensive experience in financial strategy and risk management, helping organizations navigate complex market conditions with data-driven insights.",
+        "The team's strategic advisory was instrumental in our successful exit. Their attention to detail and comprehensive approach exceeded our expectations. Highly recommended.",
       image: "/images/hero-bg.png",
-      alt: "Sarah Johnson",
+      alt: "Maria Garcia - Founder",
     },
     {
       id: 3,
-      title: "Ahmed Hassan",
+      title: "Ahmed Al-Rashid",
       description:
-        "Ahmed specializes in investment analysis and portfolio management, with a proven track record of identifying high-potential opportunities across diverse sectors.",
+        "Outstanding support throughout our capital raise process. CYG's network and expertise opened doors we never knew existed. Professional, reliable, and results-driven.",
       image: "/images/services.png",
-      alt: "Ahmed Hassan",
+      alt: "Ahmed Al-Rashid - Managing Partner",
     },
     {
       id: 4,
-      title: "Michael Chen",
+      title: "Jennifer Lee",
       description:
-        "Michael brings deep expertise in corporate finance and strategic planning, helping companies optimize their capital structure and growth strategies.",
+        "Their buy-side advisory helped us identify and acquire the perfect strategic assets. The due diligence process was thorough and their guidance invaluable.",
       image: "/images/slide-1.png",
-      alt: "Michael Chen",
+      alt: "Jennifer Lee - CFO",
     },
     {
       id: 5,
-      title: "Elena Rodriguez",
+      title: "Robert Chen",
       description:
-        "Elena is a seasoned advisor in international markets, specializing in cross-border transactions and regulatory compliance across multiple jurisdictions.",
+        "CYG Partners delivered exceptional results on our international expansion. Their cross-border expertise and local market knowledge made all the difference.",
       image: "/images/slide-2.png",
-      alt: "Elena Rodriguez",
+      alt: "Robert Chen - CEO",
     },
     {
       id: 6,
-      title: "David Kim",
+      title: "Sarah Williams",
       description:
-        "David focuses on technology investments and digital transformation, helping traditional businesses adapt to the evolving digital landscape.",
+        "The strategic planning sessions were transformative for our business. CYG helped us restructure and optimize operations, leading to 60% growth in the first year.",
       image: "/images/slide.png",
-      alt: "David Kim",
+      alt: "Sarah Williams - President",
     },
   ];
+
+  // Use prop slides if provided, otherwise use fallback
+  const slides =
+    propSlides && propSlides.length > 0 ? propSlides : fallbackSlides;
 
   useEffect(() => {
     setIsClient(true);
@@ -124,9 +135,7 @@ export default function HorizontalCarousel() {
             key={slide.id}
             className="item"
             style={{
-              background: `linear-gradient(0deg, rgba(0, 0, 0, 0.87), rgba(0, 0, 0, 0.84)), url(${slide.image})`,
-              backgroundPosition: "center",
-              backgroundSize: "cover",
+              background: `linear-gradient(0deg, rgba(0, 0, 0, 0.87), rgba(0, 0, 0, 0.84)), url('${slide.image}') center / cover no-repeat`,
             }}
           >
             <div className="content">

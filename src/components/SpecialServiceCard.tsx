@@ -87,6 +87,7 @@ export default function SpecialServiceCard({
                 src={mainIcon}
                 alt={mainIconAlt}
                 fill
+                sizes="256px"
                 className="object-contain"
               />
             </div>
@@ -109,23 +110,25 @@ export default function SpecialServiceCard({
               key={index}
               className="p-6 text-center transition-all duration-300 hover:scale-105 hover:shadow-lg bg-black border border-gray-700 hover:border-primary-500 hover:bg-primary-500"
             >
-               <div className="w-48 h-48 rounded-full flex items-center justify-center mx-auto mb-4 relative">
-                 {service.icon && typeof service.icon === 'string' && service.icon.trim() !== "" ? (
-                   <Image
-                     src={service.icon}
-                     alt={service.title}
-                     fill
-                     className="object-contain"
-                   />
-                 ) : (
-                   <Image
-                     src="/images/spec-ico.png"
-                     alt={service.title}
-                     fill
-                     className="object-contain"
-                   />
-                 )}
-               </div>
+              <div className="w-48 h-48 rounded-full flex items-center justify-center mx-auto mb-4 relative">
+                {service.icon && typeof service.icon === "string" && service.icon.trim() !== "" ? (
+                  <Image
+                    src={service.icon}
+                    alt={service.title}
+                    fill
+                    sizes="192px"
+                    className="object-contain"
+                  />
+                ) : (
+                  <Image
+                    src="/images/spec-ico.png"
+                    alt={service.title}
+                    fill
+                    sizes="192px"
+                    className="object-contain"
+                  />
+                )}
+              </div>
               <h3 className="text-white font-semibold text-lg">
                 {service.title}
               </h3>

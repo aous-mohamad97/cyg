@@ -10,6 +10,11 @@ import {
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 
+// Data layer functions and types
+import { getNavigation, getServices } from "@/lib/strapi";
+import { transformNavigation, transformService } from "@/lib/transform";
+import { NavigationData, Service, ServiceData, NavLink } from "@/types/strapi";
+
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isServicesOpen, setIsServicesOpen] = useState(false);
@@ -17,12 +22,45 @@ export default function Header() {
   const [headerPadding, setHeaderPadding] = useState("2.5rem 10rem");
   const pathname = usePathname();
 
-  // Helper functions to check if links are active
+  // State for dynamic data
+  const [navigationData, setNavigationData] = useState<NavigationData | null>(
+    null
+  );
+  const [services, setServices] = useState<ServiceData[]>([]);
+
+  // Helper functions to check for active links
   const isActive = (path: string) => pathname === path;
-  const isServicesActive = () => pathname.startsWith('/services');
-  const isServicesDetailActive = (servicePath: string) => pathname === servicePath;
+  const isServicesActive = () => pathname.startsWith("/services");
+  const isServicesDetailActive = (servicePath: string) =>
+    pathname === servicePath;
 
   useEffect(() => {
+    // Combined data fetching function
+    const fetchData = async () => {
+      try {
+        const [navResponse, servicesResponse] = await Promise.all([
+          getNavigation(),
+          getServices(),
+        ]);
+
+        if (navResponse) {
+          const transformedNav = transformNavigation(navResponse);
+          setNavigationData(transformedNav);
+        }
+
+        if (servicesResponse && servicesResponse.length > 0) {
+          const transformedServices = servicesResponse.map((service: Service) =>
+            transformService(service)
+          );
+          setServices(transformedServices);
+        }
+      } catch (error) {
+        console.error("Error fetching header data:", error);
+      }
+    };
+
+    fetchData();
+
     const handleScroll = () => {
       const scrollTop = window.scrollY || document.documentElement.scrollTop;
       const shouldBeScrolled = scrollTop > 20;
@@ -38,11 +76,9 @@ export default function Header() {
       else setHeaderPadding("2.5rem 1rem");
     };
 
-    // Add event listeners
     window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("resize", handleResize);
 
-    // Initial checks
     handleScroll();
     handleResize();
 
@@ -51,6 +87,68 @@ export default function Header() {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  // Fallback data for initial render or API failure
+  const fallbackNavigationData: NavigationData = {
+    logoUrl: "/images/logo.png",
+    logoAlt: "CYG Partners",
+    navLinks: [
+      { id: 1, label: "Home", url: "/" },
+      { id: 2, label: "About Us", url: "/about" },
+      { id: 3, label: "Clients", url: "/clients" },
+      { id: 4, label: "Contact Us", url: "/contact" },
+    ],
+  };
+
+  const fallbackServices: ServiceData[] = [
+    {
+      id: 1,
+      title: "Strategic Advisory",
+      buttonHref: "/services/strategic-advisory",
+      titleAccent: "",
+      description: "",
+      image: "",
+      imageAlt: "",
+      buttonText: "",
+      serviceKey: "",
+      subServices: [],
+    },
+    {
+      id: 2,
+      title: "Sell-Side Advisory",
+      buttonHref: "/services/sell-side-advisory",
+      titleAccent: "",
+      description: "",
+      image: "",
+      imageAlt: "",
+      buttonText: "",
+      serviceKey: "",
+      subServices: [],
+    },
+    {
+      id: 3,
+      title: "Buy-Side Advisory",
+      buttonHref: "/services/buy-side-advisory",
+      titleAccent: "",
+      description: "",
+      image: "",
+      imageAlt: "",
+      buttonText: "",
+      serviceKey: "",
+      subServices: [],
+    },
+  ];
+
+  const currentNavData = navigationData || fallbackNavigationData;
+  const currentServices = services.length > 0 ? services : fallbackServices;
+
+  // Split navLinks for layout flexibility (e.g., Contact Us as a button)
+  const mainLinks = currentNavData.navLinks.filter(
+    (link) => link.url !== "/contact"
+  );
+  const contactLink = currentNavData.navLinks.find(
+    (link) => link.url === "/contact"
+  );
 
   return (
     <header
@@ -84,117 +182,86 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <Image
-              src="/images/logo.png"
-              alt="CYG Partners"
+              src={currentNavData.logoUrl}
+              alt={currentNavData.logoAlt}
               width={120}
               height={48}
               className="object-contain"
+              style={{ height: "auto", width: "auto" }}
             />
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link
-              href="/"
-              className={`transition-colors duration-200 ${
-                isActive('/') 
-                  ? 'text-primary-500 font-semibold' 
-                  : 'text-primary-200 hover:text-primary-500'
-              }`}
+            {mainLinks.map((link) => (
+              <Link
+                key={link.id}
+                href={link.url}
+                className={`transition-colors duration-200 ${
+                  isActive(link.url)
+                    ? "text-primary-500 font-semibold"
+                    : "text-primary-200 hover:text-primary-500"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+
+            {/* Services Dropdown */}
+            <div
+              className="relative"
+              onMouseEnter={() => setIsServicesOpen(true)}
+              onMouseLeave={() => setIsServicesOpen(false)}
             >
-              Home
-            </Link>
+              <Link
+                href="/services"
+                className={`flex items-center transition-colors duration-200 ${
+                  isServicesActive()
+                    ? "text-primary-500 font-semibold"
+                    : "text-primary-200 hover:text-primary-500"
+                }`}
+              >
+                Services
+                <ChevronDownIcon className="ml-1 h-4 w-4" />
+              </Link>
 
-                         <div 
-               className="relative"
-               onMouseEnter={() => setIsServicesOpen(true)}
-               onMouseLeave={() => setIsServicesOpen(false)}
-             >
-               <Link
-                 href="/services"
-                 className={`flex items-center transition-colors duration-200 ${
-                   isServicesActive() 
-                     ? 'text-primary-500 font-semibold' 
-                     : 'text-primary-200 hover:text-primary-500'
-                 }`}
-               >
-                 Services
-                 <ChevronDownIcon className="ml-1 h-4 w-4" />
-               </Link>
-
-               {/* Services Dropdown */}
-               <div
-                 className={`absolute top-full left-0 mt-0 w-64 bg-primary-950 border border-primary-700 rounded-lg shadow-xl transition-all duration-200 ${
-                   isServicesOpen
-                     ? "opacity-100 translate-y-0"
-                     : "opacity-0 -translate-y-2 pointer-events-none"
-                 }`}
-               >
+              <div
+                className={`absolute top-full left-0 mt-0 w-64 bg-primary-950 border border-primary-700 rounded-lg shadow-xl transition-all duration-200 ${
+                  isServicesOpen
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 -translate-y-2 pointer-events-none"
+                }`}
+              >
                 <div className="py-2">
-                  <Link
-                    href="/services/strategic-advisory"
-                    className={`block px-4 py-3 transition-colors duration-200 ${
-                      isServicesDetailActive('/services/strategic-advisory')
-                        ? 'text-primary-500 bg-primary-700 font-semibold'
-                        : 'text-primary-200 hover:bg-primary-700'
-                    }`}
-                  >
-                    Strategic Advisory
-                  </Link>
-                  <Link
-                    href="/services/sell-side-advisory"
-                    className={`block px-4 py-3 transition-colors duration-200 ${
-                      isServicesDetailActive('/services/sell-side-advisory')
-                        ? 'text-primary-500 bg-primary-700 font-semibold'
-                        : 'text-primary-200 hover:bg-primary-700'
-                    }`}
-                  >
-                    Sell-Side Advisory
-                  </Link>
-                  <Link
-                    href="/services/buy-side-advisory"
-                    className={`block px-4 py-3 transition-colors duration-200 ${
-                      isServicesDetailActive('/services/buy-side-advisory')
-                        ? 'text-primary-500 bg-primary-700 font-semibold'
-                        : 'text-primary-200 hover:bg-primary-700'
-                    }`}
-                  >
-                    Buy-Side Advisory
-                  </Link>
+                  {currentServices.map((service) => (
+                    <Link
+                      key={service.id}
+                      href={service.buttonHref}
+                      className={`block px-4 py-3 transition-colors duration-200 ${
+                        isServicesDetailActive(service.buttonHref)
+                          ? "text-primary-500 bg-primary-700 font-semibold"
+                          : "text-primary-200 hover:bg-primary-700"
+                      }`}
+                    >
+                      {service.title} {service.titleAccent}
+                    </Link>
+                  ))}
                 </div>
               </div>
             </div>
 
-            <Link
-              href="/about"
-              className={`transition-colors duration-200 ${
-                isActive('/about') 
-                  ? 'text-primary-500 font-semibold' 
-                  : 'text-primary-200 hover:text-primary-500'
-              }`}
-            >
-              About Us
-            </Link>
-            <Link
-              href="/clients"
-              className={`transition-colors duration-200 ${
-                isActive('/clients') 
-                  ? 'text-primary-500 font-semibold' 
-                  : 'text-primary-200 hover:text-primary-500'
-              }`}
-            >
-              Clients
-            </Link>
-            <Link
-              href="/contact"
-              className={`transition-colors duration-200 ${
-                isActive('/contact') 
-                  ? 'text-primary-500 font-semibold' 
-                  : 'text-primary-200 hover:text-primary-500'
-              }`}
-            >
-              Contact Us
-            </Link>
+            {contactLink && (
+              <Link
+                href={contactLink.url}
+                className={`transition-colors duration-200 ${
+                  isActive(contactLink.url)
+                    ? "text-primary-500 font-semibold"
+                    : "text-primary-200 hover:text-primary-500"
+                }`}
+              >
+                {contactLink.label}
+              </Link>
+            )}
           </nav>
 
           {/* Mobile menu button */}
@@ -212,85 +279,54 @@ export default function Header() {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden border-t border-primary-700">
+          <div className="md:hidden border-t border-primary-700 bg-black">
             <div className="px-2 pt-2 pb-3 space-y-1">
-                             <Link
-                 href="/"
-                 className={`block px-3 py-2 rounded-md transition-colors duration-200 ${
-                   isActive('/') 
-                     ? 'text-primary-500 bg-primary-800 font-semibold' 
-                     : 'text-primary-200 hover:bg-primary-800'
-                 }`}
-                 onClick={() => setIsMenuOpen(false)}
-               >
-                 Home
-               </Link>
-               <Link
-                 href="/services/strategic-advisory"
-                 className={`block px-3 py-2 rounded-md transition-colors duration-200 ${
-                   isServicesDetailActive('/services/strategic-advisory')
-                     ? 'text-primary-500 bg-primary-800 font-semibold' 
-                     : 'text-primary-200 hover:bg-primary-800'
-                 }`}
-                 onClick={() => setIsMenuOpen(false)}
-               >
-                 Strategic Advisory
-               </Link>
-               <Link
-                 href="/services/sell-side-advisory"
-                 className={`block px-3 py-2 rounded-md transition-colors duration-200 ${
-                   isServicesDetailActive('/services/sell-side-advisory')
-                     ? 'text-primary-500 bg-primary-800 font-semibold' 
-                     : 'text-primary-200 hover:bg-primary-800'
-                 }`}
-                 onClick={() => setIsMenuOpen(false)}
-               >
-                 Sell-Side Advisory
-               </Link>
-               <Link
-                 href="/services/buy-side-advisory"
-                 className={`block px-3 py-2 rounded-md transition-colors duration-200 ${
-                   isServicesDetailActive('/services/buy-side-advisory')
-                     ? 'text-primary-500 bg-primary-800 font-semibold' 
-                     : 'text-primary-200 hover:bg-primary-800'
-                 }`}
-                 onClick={() => setIsMenuOpen(false)}
-               >
-                 Buy-Side Advisory
-               </Link>
-               <Link
-                 href="/about"
-                 className={`block px-3 py-2 rounded-md transition-colors duration-200 ${
-                   isActive('/about') 
-                     ? 'text-primary-500 bg-primary-800 font-semibold' 
-                     : 'text-primary-200 hover:bg-primary-800'
-                 }`}
-                 onClick={() => setIsMenuOpen(false)}
-               >
-                 About Us
-               </Link>
-               <Link
-                 href="/clients"
-                 className={`block px-3 py-2 rounded-md transition-colors duration-200 ${
-                   isActive('/clients') 
-                     ? 'text-primary-500 bg-primary-800 font-semibold' 
-                     : 'text-primary-200 hover:bg-primary-800'
-                 }`}
-                 onClick={() => setIsMenuOpen(false)}
-               >
-                 Clients
-               </Link>
-               <Link
-                 href="/contact"
-                 className={`block px-3 py-2 rounded-md transition-colors duration-200 ${
-                   isActive('/contact') 
-                     ? 'text-primary-500 bg-primary-800 font-semibold' 
-                     : 'text-primary-200 hover:bg-primary-800'
-                 }`}
-                 onClick={() => setIsMenuOpen(false)}
-               >
-                 Contact Us
-               </Link>
+              {/* Main Links */}
+              {mainLinks.map((link) => (
+                <Link
+                  key={`mobile-${link.id}`}
+                  href={link.url}
+                  className={`block px-3 py-2 rounded-md transition-colors duration-200 ${
+                    isActive(link.url)
+                      ? "text-primary-500 bg-primary-800 font-semibold"
+                      : "text-primary-200 hover:bg-primary-800"
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+
+              {/* Service Links */}
+              {currentServices.map((service) => (
+                <Link
+                  key={`mobile-service-${service.id}`}
+                  href={service.buttonHref}
+                  className={`block px-3 py-2 rounded-md transition-colors duration-200 ${
+                    isServicesDetailActive(service.buttonHref)
+                      ? "text-primary-500 bg-primary-800 font-semibold"
+                      : "text-primary-200 hover:bg-primary-800"
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {service.title} {service.titleAccent}
+                </Link>
+              ))}
+
+              {/* Contact Link */}
+              {contactLink && (
+                <Link
+                  href={contactLink.url}
+                  className={`block px-3 py-2 rounded-md transition-colors duration-200 ${
+                    isActive(contactLink.url)
+                      ? "text-primary-500 bg-primary-800 font-semibold"
+                      : "text-primary-200 hover:bg-primary-800"
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {contactLink.label}
+                </Link>
+              )}
             </div>
           </div>
         )}

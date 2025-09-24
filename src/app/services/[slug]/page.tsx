@@ -1,10 +1,26 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import Hero from "@/components/Hero";
 import SimpleHero from "@/components/SimpleHero";
 import Services from "@/components/Services";
+import { getServices } from "@/lib/strapi";
+import { transformService } from "@/lib/transform";
+import { Service, ServiceData } from "@/types/strapi";
+import {
+  getPageSectionBySectionId,
+  getPageServicesSectionByPageName,
+  getPageHeroSectionByPageName,
+} from "@/lib/strapi";
+import {
+  transformPageSection,
+  transformPageServicesSection,
+  transformPageHeroSection,
+} from "@/lib/transform";
+import { PageSectionData, PageServicesSectionData, PageHeroSectionData } from "@/types/strapi";
 
+// Interface for the hard-coded service data
 interface ServiceDetail {
   title: string;
   titleAccent: string;
@@ -33,7 +49,72 @@ export default function ServiceDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
 
-  // This will be replaced with actual data fetching later
+  // State for the dynamic services section
+  const [pageServicesData, setPageServicesData] =
+    useState<PageServicesSectionData | null>(null);
+  const [simpleHeroData, setSimpleHeroData] = useState<PageSectionData | null>(
+    null
+  );
+  const [heroData, setHeroData] = useState<PageHeroSectionData | null>(null);
+  const [selectedService, setSelectedService] = useState<ServiceData | null>(
+    null
+  );
+
+  // useEffect to fetch data when the slug changes
+  useEffect(() => {
+    if (!slug) return;
+
+    const fetchData = async () => {
+      try {
+        const pageName = `service-${slug}`;
+        const pageServices = await getPageServicesSectionByPageName(pageName);
+
+        if (pageServices) {
+          const transformedData = transformPageServicesSection(pageServices);
+          setPageServicesData(transformedData);
+        } else {
+          setPageServicesData(null);
+        }
+        // Fetch hero section for this service page
+        const heroSection = await getPageHeroSectionByPageName(pageName);
+        if (heroSection) {
+          setHeroData(transformPageHeroSection(heroSection));
+        } else {
+          setHeroData(null);
+        }
+        // Fetch services and pick the one matching this page's slug via serviceKey
+        const allServices = await getServices();
+        if (allServices && allServices.length > 0) {
+          const targetKey = slug.replace("-advisory", "");
+          const found = (allServices as Service[]).find(
+            (s) => (s.serviceKey || "").toLowerCase() === targetKey
+          );
+          if (found) {
+            setSelectedService(transformService(found));
+          } else {
+            setSelectedService(null);
+          }
+        }
+
+        const simpleHeroSectionId = `${slug}-hero`;
+        const simpleHeroSection = await getPageSectionBySectionId(
+          simpleHeroSectionId
+        );
+        if (simpleHeroSection) {
+          setSimpleHeroData(transformPageSection(simpleHeroSection));
+        } else {
+          setSimpleHeroData(null);
+        }
+      } catch (error) {
+        console.error("Error fetching page services section data:", error);
+        setPageServicesData(null);
+      }
+    };
+
+    fetchData();
+  }, [slug]);
+
+  // This hard-coded data is still used for the top part of the page
   const getServiceData = (slug: string): ServiceDetail => {
     const services: Record<string, ServiceDetail> = {
       "strategic-advisory": {
@@ -484,222 +565,14 @@ export default function ServiceDetailPage() {
         ctaButtonText: "Start Your Search",
       },
     };
-
     return services[slug] || services["strategic-advisory"];
   };
 
   const serviceData = getServiceData(slug);
 
-  // Function to get special service data based on slug
-  const getSpecialServiceData = (slug: string) => {
-    const specialServiceDataMap: Record<
-      string,
-      {
-        title: string;
-        titleAccent: string;
-        description: string;
-        buttonText: string;
-        buttonHref: string;
-        mainIcon: string;
-        mainIconAlt: string;
-        mainContentOrder: 1 | 2;
-        subServicesOrder: 1 | 2;
-        subServices: Array<{
-          title: string;
-          icon: React.ReactNode;
-          backgroundColor: "green" | "black";
-          href: string;
-        }>;
-      }
-    > = {
-      "strategic-advisory": {
-        title: "Strategic",
-        titleAccent: "Advisory Services",
-        description:
-          "Comprehensive strategic planning and advisory services to optimize your business operations and drive sustainable growth. From market analysis to growth strategies, we help you navigate complex business challenges.",
-        buttonText: "Get Started",
-        buttonHref: "/contact",
-        mainIcon: "/images/spec-ico.png",
-        mainIconAlt: "Strategic Advisory",
-        mainContentOrder: 1,
-        subServicesOrder: 2,
-        subServices: [
-          {
-            title: "Monthly & Quarterly Performance",
-            icon: (
-              <svg
-                className="w-8 h-8 text-green-600"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            ),
-            backgroundColor: "green" as const,
-            href: `/services/${slug}/monthly-quarterly-performance`,
-          },
-          {
-            title: "Financial & Operational Monitoring",
-            icon: (
-              <svg
-                className="w-8 h-8 text-gray-800"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            ),
-            backgroundColor: "black" as const,
-            href: `/services/${slug}/financial-operational-monitoring`,
-          },
-          {
-            title: "Ad Hoc Strategic Advisory",
-            icon: (
-              <svg
-                className="w-8 h-8 text-gray-800"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
-              </svg>
-            ),
-            backgroundColor: "black" as const,
-            href: `/services/${slug}/ad-hoc-strategic-advisory`,
-          },
-        ],
-      },
-      "sell-side-advisory": {
-        title: "Sell-Side",
-        titleAccent: "Advisory Services",
-        description:
-          "Expert guidance through the entire sell-side process, maximizing value and ensuring smooth transactions. From preparation to closing, we help you achieve optimal outcomes.",
-        buttonText: "Start Your Exit",
-        buttonHref: "/contact",
-        mainIcon: "/images/stock.png",
-        mainIconAlt: "Sell-Side Advisory",
-        mainContentOrder: 1,
-        subServicesOrder: 2,
-        subServices: [
-          {
-            title: "Business Valuation",
-            icon: (
-              <svg
-                className="w-8 h-8 text-green-600"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            ),
-            backgroundColor: "green" as const,
-            href: `/services/${slug}/business-valuation`,
-          },
-          {
-            title: "Buyer Identification",
-            icon: (
-              <svg
-                className="w-8 h-8 text-gray-800"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            ),
-            backgroundColor: "black" as const,
-            href: `/services/${slug}/buyer-identification`,
-          },
-          {
-            title: "Transaction Management",
-            icon: (
-              <svg
-                className="w-8 h-8 text-gray-800"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
-              </svg>
-            ),
-            backgroundColor: "black" as const,
-            href: `/services/${slug}/transaction-management`,
-          },
-        ],
-      },
-      "buy-side-advisory": {
-        title: "Buy-Side",
-        titleAccent: "Advisory Services",
-        description:
-          "Strategic acquisition support and due diligence to help you make informed investment decisions. From target identification to integration, we guide you through successful acquisitions.",
-        buttonText: "Start Your Search",
-        buttonHref: "/contact",
-        mainIcon: "/images/t-stock.png",
-        mainIconAlt: "Buy-Side Advisory",
-        mainContentOrder: 1,
-        subServicesOrder: 2,
-        subServices: [
-          {
-            title: "Target Screening",
-            icon: (
-              <svg
-                className="w-8 h-8 text-green-600"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            ),
-            backgroundColor: "green" as const,
-            href: `/services/${slug}/target-screening`,
-          },
-          {
-            title: "Due Diligence",
-            icon: (
-              <svg
-                className="w-8 h-8 text-gray-800"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            ),
-            backgroundColor: "black" as const,
-            href: `/services/${slug}/due-diligence`,
-          },
-          {
-            title: "Integration Planning",
-            icon: (
-              <svg
-                className="w-8 h-8 text-gray-800"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
-              </svg>
-            ),
-            backgroundColor: "black" as const,
-            href: `/services/${slug}/integration-planning`,
-          },
-        ],
-      },
-    };
+  
 
-    return (
-      specialServiceDataMap[slug] || specialServiceDataMap["strategic-advisory"]
-    );
-  };
-
-  const heroData = {
+  const fallbackHeroData = {
     backgroundImage: serviceData.heroBackground,
     title: serviceData.title,
     titleAccent: serviceData.titleAccent,
@@ -715,70 +588,105 @@ export default function ServiceDetailPage() {
     textAlign: "left" as const,
   };
 
+  // Fallback data for the first dynamic services section
+  const fallbackPageServicesData: PageServicesSectionData = {
+    id: 1,
+    pageName: "service-fallback",
+    title: "Grow Boldly.",
+    titleAccent: "Think Strategically",
+    description:
+      "Strategic Advisory to overcome challenges, unlock growth, and reach long-term goals — with expert insights and practical support.",
+    backgroundGradient: "linear-gradient(180deg, #203829 0%, #979797 100.02%)",
+    showSpecialService: false,
+    clickableCards: false,
+    services: [
+      {
+        id: 1,
+        title: "Made For",
+        titleAccent: "Founders",
+        description:
+          "We help you gain clarity, monitor key performance metrics, and build a foundation for sustainable growth.",
+        image: "/images/serv-ico.png",
+        imageAlt: "Founders",
+        buttonText: "",
+        buttonHref: "",
+        serviceKey: "",
+        subServices: [],
+      },
+      {
+        id: 2,
+        title: "Made For",
+        titleAccent: "Businesses",
+        description:
+          "We streamline decisions and boost efficiency by optimizing your financial and operational setup.",
+        image: "/images/serv2-ico.png",
+        imageAlt: "Businesses",
+        buttonText: "",
+        buttonHref: "",
+        serviceKey: "",
+        subServices: [],
+      },
+      {
+        id: 3,
+        title: "Made For",
+        titleAccent: "Entrepreneurs",
+        description:
+          "Strategic guidance and tailored solutions to help you grow and adapt with confidence.",
+        image: "/images/serv3-ico.png",
+        imageAlt: "Entrepreneurs",
+        buttonText: "",
+        buttonHref: "",
+        serviceKey: "",
+        subServices: [],
+      },
+    ],
+  };
+
+  const currentPageServicesData = pageServicesData || fallbackPageServicesData;
+  const fallbackSimpleHeroData: PageSectionData = {
+    id: 1,
+    sectionId: "service-fallback-hero",
+    title: "Driving Smarter",
+    titleAccent: "Growth",
+    description:
+      "Expert support for businesses and entrepreneurs. From performance tracking to strategic decision-making, we guide you every step of the way.",
+    backgroundImage: "/images/service-bg.png",
+  };
+  const currentSimpleHeroData = simpleHeroData || fallbackSimpleHeroData;
+
   return (
     <main>
-      {/* Hero Section */}
-      <Hero {...heroData} />
-
-      {/* Second Hero Section - Center Aligned */}
+      <Hero
+        backgroundImage={(heroData && heroData.backgroundImage) || fallbackHeroData.backgroundImage}
+        title={(heroData && heroData.title) || fallbackHeroData.title}
+        titleAccent={(heroData && heroData.titleAccent) || fallbackHeroData.titleAccent}
+        description={(heroData && heroData.description) || fallbackHeroData.description}
+        buttons={(heroData && heroData.buttons) || fallbackHeroData.buttons}
+        textAlign={(heroData && heroData.textAlign) || fallbackHeroData.textAlign}
+      />
       <SimpleHero
-        backgroundImage="/images/service-bg.png"
-        title="Driving Smarter Growth"
-        description="CYG Partners' Strategic Advisory helps businesses and entrepreneurs elevate operations with expert support.
-
-From performance tracking to strategic decision-making, we guide you every step of the way."
+        backgroundImage={currentSimpleHeroData.backgroundImage}
+        title={currentSimpleHeroData.title}
+        titleAccent={currentSimpleHeroData.titleAccent}
+        description={currentSimpleHeroData.description}
       />
-
-      {/* Services Overview Section */}
       <Services
-        title="Grow Boldly."
-        titleAccent="Think Strategically"
-        description="Strategic Advisory to overcome challenges, unlock growth, and reach long-term goals — with expert insights and practical support."
-        backgroundGradient="linear-gradient(180deg, #203829 0%, #979797 100.02%)"
-        services={[
-          {
-            title: "Made For",
-            titleAccent: "Founders",
-            description:
-              "We help you gain clarity, monitor key performance metrics, and build a foundation for sustainable growth.",
-            image: "/images/serv-ico.png",
-            imageAlt: "Strategic Advisory",
-            buttonText: "",
-            buttonHref: "",
-          },
-          {
-            title: "Made For",
-            titleAccent: "Businesses",
-            description:
-              "We streamline decisions and boost efficiency by optimizing your financial and operational setup.",
-            image: "/images/serv2-ico.png",
-            imageAlt: "Sell-Side Advisory",
-            buttonText: "",
-            buttonHref: "",
-          },
-          {
-            title: "Made For",
-            titleAccent: "Entrepreneurs",
-            description:
-              "Strategic guidance and tailored solutions to help you grow and adapt with confidence.",
-            image: "/images/serv3-ico.png",
-            imageAlt: "Buy-Side Advisory",
-            buttonText: "",
-            buttonHref: "",
-          },
-        ]}
-        showSpecialService={false}
+        title={currentPageServicesData.title}
+        titleAccent={currentPageServicesData.titleAccent}
+        description={currentPageServicesData.description}
+        backgroundGradient={currentPageServicesData.backgroundGradient}
+        services={currentPageServicesData.services}
+        showSpecialService={currentPageServicesData.showSpecialService}
       />
-
-      {/* Core Services Section with Special Card */}
       <Services
-        title="Our Services"
-        titleAccent="Core"
-        description="We offer three core services to help you grow, sell, or scale—clearly and confidently."
+        title={serviceData.title}
+        titleAccent={serviceData.titleAccent}
+        description={serviceData.description}
         backgroundGradient="linear-gradient(180deg, #000000 0%, #000000 100%)"
-        services={[]}
+        services={selectedService ? [selectedService] : []}
         showSpecialService={true}
-        specialServiceData={getSpecialServiceData(slug)}
+        onlySpecialCard={true}
+        defaultActiveIndex={0}
       />
     </main>
   );

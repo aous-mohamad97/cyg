@@ -1,14 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Hero from "@/components/Hero";
 import IndustryPerspectivesHeading from "@/components/IndustryPerspectivesHeading";
 import IndustryPerspectivesCarousel from "@/components/IndustryPerspectivesCarousel";
 import CTA from "@/components/CTA";
 import AnimateOnScroll from "@/components/AnimateOnScroll";
+import { getPageHeroSectionByPageName, getOfficeLocations, submitContactForm } from "@/lib/strapi";
+import { transformPageHeroSection, transformOfficeLocation } from "@/lib/transform";
+import { PageHeroSectionData, OfficeLocation, OfficeLocationData, ContactFormData } from "@/types/strapi";
 
 export default function Contact() {
+  const [heroData, setHeroData] = useState<PageHeroSectionData | null>(null);
+  const [officeLocationsData, setOfficeLocationsData] = useState<OfficeLocationData[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [formData, setFormData] = useState({
     name: "",
     companyName: "",
@@ -18,10 +25,128 @@ export default function Contact() {
     message: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch hero data
+        const pageHero = await getPageHeroSectionByPageName("contact");
+        if (pageHero) {
+          const transformedHeroData = transformPageHeroSection(pageHero);
+          setHeroData(transformedHeroData);
+        }
+
+        // Fetch office locations data
+        const officeLocations = await getOfficeLocations();
+        if (officeLocations && officeLocations.length > 0) {
+          const transformedOfficeLocationsData = officeLocations.map((office: OfficeLocation) =>
+            transformOfficeLocation(office)
+          );
+          setOfficeLocationsData(transformedOfficeLocationsData);
+        }
+      } catch (error) {
+        console.error("Error fetching contact page data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Fallback data
+  const fallbackHeroData = {
+    id: 1,
+    pageName: "contact",
+    title: "Let's Talk About Your",
+    titleAccent: "Next Move",
+    description:
+      "Need help exploring strategic, sell-side, or buy-side advisory? Let us know, and one of our advisors will be in touch promptly.",
+    backgroundImage: "/images/contact-bg.png",
+    buttons: [
+      {
+        id: 1,
+        text: "Explore Services",
+        href: "/services",
+        variant: "secondary" as const,
+        icon: true,
+      },
+      {
+        id: 2,
+        text: "Get Started",
+        href: "/contact",
+        variant: "primary" as const,
+        icon: false,
+      },
+    ],
+    textAlign: "center" as const,
+    showFooter: false,
+  };
+
+  const currentHeroData = heroData || fallbackHeroData;
+
+  // Fallback data for office locations
+  const fallbackOfficeLocationsData = [
+    {
+      id: 1,
+      imageSrc: "/images/slide.png",
+      title: "Dubai, UAE",
+      category1: "info@cygpartners.com",
+      category2: "+971 50 358 2464",
+      date: "Main Office",
+      href: "https://maps.google.com/?q=Dubai+UAE",
+    },
+    {
+      id: 2,
+      imageSrc: "/images/hero-bg.png",
+      title: "Beirut, Lebanon",
+      category1: "info@cygpartners.com",
+      category2: "+961 1 234 567",
+      date: "Regional Office",
+      href: "https://maps.google.com/?q=Beirut+Lebanon",
+    },
+    {
+      id: 3,
+      imageSrc: "/images/services.png",
+      title: "Coming Soon",
+      category1: "info@cygpartners.com",
+      category2: "Global Reach",
+      date: "Expanding Soon",
+    },
+  ];
+
+  const currentOfficeLocationsData = officeLocationsData.length > 0 ? officeLocationsData : fallbackOfficeLocationsData;
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log("Form submitted:", formData);
+    setIsSubmitting(true);
+    setSubmitStatus('idle');
+
+    try {
+      const submissionData: ContactFormData = {
+        name: formData.name,
+        companyName: formData.companyName,
+        email: formData.email,
+        phone: formData.phone,
+        service: formData.service,
+        message: formData.message,
+      };
+
+      await submitContactForm(submissionData);
+      
+      setSubmitStatus('success');
+      // Reset form
+      setFormData({
+        name: "",
+        companyName: "",
+        email: "",
+        phone: "",
+        service: "",
+        message: "",
+      });
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setSubmitStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (
@@ -40,24 +165,12 @@ export default function Contact() {
       <main className="min-h-screen bg-black text-primary-200">
         {/* Hero Section */}
         <Hero
-          backgroundImage="/images/contact-bg.png"
-          title="Let's Talk About Your"
-          titleAccent="Next Move"
-          description="Need help exploring strategic, sell-side, or buy-side advisory? Let us know, and one of our advisors will be in touch promptly."
-          buttons={[
-            {
-              text: "Explore Services",
-              href: "/services",
-              variant: "secondary",
-              icon: true,
-            },
-            {
-              text: "Get Started",
-              href: "/contact",
-              variant: "primary",
-            },
-          ]}
-          textAlign="center"
+          backgroundImage={currentHeroData.backgroundImage}
+          title={currentHeroData.title}
+          titleAccent={currentHeroData.titleAccent}
+          description={currentHeroData.description}
+          buttons={currentHeroData.buttons}
+          textAlign={currentHeroData.textAlign}
         />
 
         {/* Contact Form and Info */}
@@ -168,8 +281,8 @@ export default function Contact() {
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                       className="w-full bg-transparent border-b border-white focus:border-green-400 outline-none transition duration-300 py-2 pl-2 text-white placeholder-gray-300"
-                       placeholder="+971 (50) 215-7254"
+                      className="w-full bg-transparent border-b border-white focus:border-green-400 outline-none transition duration-300 py-2 pl-2 text-white placeholder-gray-300"
+                      placeholder="+971 (50) 215-7254"
                     />
                   </div>
 
@@ -227,17 +340,34 @@ export default function Contact() {
                       value={formData.message}
                       onChange={handleChange}
                       rows={3}
-                       className="w-full bg-transparent border-b border-white focus:border-green-400 outline-none transition duration-300 py-2 resize-none text-white placeholder-gray-300"
-                       placeholder="Message box"
+                      className="w-full bg-transparent border-b border-white focus:border-green-400 outline-none transition duration-300 py-2 resize-none text-white placeholder-gray-300"
+                      placeholder="Message box"
                     />
                   </div>
 
                   <div className="text-center pt-4">
+                    {/* Status Messages */}
+                    {submitStatus === 'success' && (
+                      <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                        Thank you! Your message has been submitted successfully. We&apos;ll get back to you soon.
+                      </div>
+                    )}
+                    {submitStatus === 'error' && (
+                      <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                        Sorry, there was an error submitting your message. Please try again.
+                      </div>
+                    )}
+                    
                     <button
                       type="submit"
-                      className="bg-green-400 text-black font-semibold py-3 px-12 rounded-full hover:bg-green-500 transition duration-300"
+                      disabled={isSubmitting}
+                      className={`${
+                        isSubmitting 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-400 hover:bg-green-500'
+                      } text-black font-semibold py-3 px-12 rounded-full transition duration-300`}
                     >
-                      Submit
+                      {isSubmitting ? 'Submitting...' : 'Submit'}
                     </button>
                   </div>
                 </form>
@@ -247,40 +377,14 @@ export default function Contact() {
         </AnimateOnScroll>
 
         {/* Our Offices Section */}
-        <AnimateOnScroll animation="fadeInUp" delay={200}>
+        <AnimateOnScroll animation="fadeInUp" delay={400}>
           <IndustryPerspectivesHeading
             title="Our"
             titleAccent="Offices"
             description="Get in touch with us at any of our offices. We're always ready to support your next step — wherever you are."
           />
-        </AnimateOnScroll>
-        <AnimateOnScroll animation="fadeInUp" delay={400}>
           <IndustryPerspectivesCarousel
-            perspectives={[
-              {
-                imageSrc: "/images/slide.png",
-                title: "Dubai, UAE",
-                category1: "info@cygpartners.com",
-                category2: "+971 50 358 2464",
-                date: "Main Office",
-                href: "https://maps.google.com/?q=Dubai+UAE",
-              },
-              {
-                imageSrc: "/images/hero-bg.png",
-                title: "Beirut, Lebanon",
-                category1: "info@cygpartners.com",
-                category2: "+961 1 234 567",
-                date: "Regional Office",
-                href: "https://maps.google.com/?q=Beirut+Lebanon",
-              },
-              {
-                imageSrc: "/images/services.png",
-                title: "Coming Soon",
-                category1: "info@cygpartners.com",
-                category2: "Global Reach",
-                date: "Expanding Soon",
-              },
-            ]}
+            perspectives={currentOfficeLocationsData}
           />
         </AnimateOnScroll>
 

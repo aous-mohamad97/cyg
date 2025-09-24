@@ -3,7 +3,20 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 
-export default function FlyonCarousel() {
+interface TeamMemberData {
+  id: number;
+  title: string;
+  description: string;
+  image: string;
+  alt: string;
+  position?: string;
+}
+
+interface FlyonCarouselProps {
+  teamMembers?: TeamMemberData[];
+}
+
+export default function FlyonCarousel({ teamMembers: propTeamMembers }: FlyonCarouselProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isClient, setIsClient] = useState(false);
 
@@ -11,16 +24,47 @@ export default function FlyonCarousel() {
     setIsClient(true);
   }, []);
 
+  // Fallback team members data
+  const fallbackTeamMembers = [
+    {
+      id: 1,
+      title: "Fouad Najjar",
+      description: "With over a decade of banking and advisory experience across MENA, Fouad guides business through complex financial decisions—from strategic planning to mergers & acquisitions. He turns data into actionable insights, empowering teams to make confident, growth-driven decisions, and is known for his collaborative approach and clear communication.",
+      image: "/images/slide.png",
+      alt: "Fouad Najjar",
+      position: "Managing Director",
+    },
+    {
+      id: 2,
+      title: "Sarah Johnson",
+      description: "Sarah brings extensive experience in financial strategy and risk management, helping organizations navigate complex market conditions with data-driven insights. Her expertise in regulatory compliance and strategic planning has helped numerous companies achieve sustainable growth and operational excellence.",
+      image: "/images/hero-bg.png",
+      alt: "Sarah Johnson",
+      position: "Senior Advisor",
+    },
+    {
+      id: 3,
+      title: "Ahmed Hassan",
+      description: "Ahmed specializes in investment analysis and portfolio management, with a proven track record of identifying high-potential opportunities across diverse sectors. His analytical approach and deep market knowledge enable clients to make informed investment decisions that drive long-term value creation.",
+      image: "/images/services.png",
+      alt: "Ahmed Hassan",
+      position: "Investment Director",
+    }
+  ];
+
+  // Use prop team members if provided, otherwise use fallback
+  const teamMembers = propTeamMembers && propTeamMembers.length > 0 ? propTeamMembers : fallbackTeamMembers;
+
   // Auto-advance slides every 5 seconds
   useEffect(() => {
     if (!isClient) return;
     
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % 3); // 3 slides total
+      setCurrentSlide((prev) => (prev + 1) % teamMembers.length);
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [isClient]);
+  }, [isClient, teamMembers.length]);
 
   const goToSlide = (index: number) => {
     setCurrentSlide(index);
@@ -95,35 +139,15 @@ export default function FlyonCarousel() {
     );
   }
 
-  const slides = [
-    {
-      name: "Fouad Najjar",
-      title: "Managing Director",
-      image: "/images/slide.png",
-      description: [
-        "With over a decade of banking and advisory experience across MENA, Fouad guides business through complex financial decisions—from strategic planning to mergers & acquisitions.",
-        "He turns data into actionable insights, empowering teams to make confident, growth-driven decisions, and is known for his collaborative approach and clear communication."
-      ]
-    },
-    {
-      name: "Sarah Johnson",
-      title: "Senior Advisor",
-      image: "/images/hero-bg.png",
-      description: [
-        "Sarah brings extensive experience in financial strategy and risk management, helping organizations navigate complex market conditions with data-driven insights.",
-        "Her expertise in regulatory compliance and strategic planning has helped numerous companies achieve sustainable growth and operational excellence."
-      ]
-    },
-    {
-      name: "Ahmed Hassan",
-      title: "Investment Director",
-      image: "/images/services.png",
-      description: [
-        "Ahmed specializes in investment analysis and portfolio management, with a proven track record of identifying high-potential opportunities across diverse sectors.",
-        "His analytical approach and deep market knowledge enable clients to make informed investment decisions that drive long-term value creation."
-      ]
-    }
-  ];
+  // Transform team members data to slides format
+  const slides = teamMembers.map(member => ({
+    name: member.title,
+    title: member.position || "Team Member",
+    image: member.image,
+    description: member.description.split('. ').filter(sentence => sentence.trim().length > 0).map(sentence => 
+      sentence.endsWith('.') ? sentence : sentence + '.'
+    )
+  }));
 
   return (
     <div className="relative w-full h-[70vh] bg-black p-8">
